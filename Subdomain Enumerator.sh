@@ -1,11 +1,22 @@
 #!/usr/bin/env bash
-# subenum.sh – Enumerador simple de subdominios
-# Uso: ./subenum.sh ejemplo.com
+# subenum_b.sh – Enumerador con reporte y validación
+# Uso: ./subenum_b.sh ejemplo.com
 
 DOMAIN="$1"
-SUBS=("www" "mail" "ftp" "dev" "test" "admin")
+OUT="subdomains.txt"
+SUBS=("www" "mail" "ftp" "dev" "test" "admin" "api" "beta")
 
-echo "[*] Buscando subdominios para $DOMAIN"
+> "$OUT"
+echo "[*] Escaneando subdominios de $DOMAIN ..."
+
 for s in "${SUBS[@]}"; do
-    dig +short "$s.$DOMAIN"
+    RES=$(dig +short "$s.$DOMAIN")
+    if [[ -n "$RES" ]]; then
+        echo -e "[+] $s.$DOMAIN -> $RES"
+        echo "$s.$DOMAIN" >> "$OUT"
+    else
+        echo -e "[-] $s.$DOMAIN -> No encontrado"
+    fi
 done
+
+echo "[*] Subdominios válidos guardados en $OUT"
