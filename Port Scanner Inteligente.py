@@ -1,20 +1,31 @@
 #!/usr/bin/env python3
-# port_scanner.py – Escaneo rápido de puertos comunes (educativo)
-# Uso: python3 port_scanner.py 127.0.0.1
+# port_scanner_b.py – Escaneo con hilos y reporte
+# Uso: python3 port_scanner_b.py 127.0.0.1
 
-import socket
-import sys
+import socket, sys, threading
 
 HOST = sys.argv[1] if len(sys.argv) > 1 else "127.0.0.1"
-COMMON_PORTS = [22, 80, 443, 3389, 3306, 8080]
+PORTS = [22, 80, 443, 3389, 3306, 8080]
+OPEN_PORTS = []
 
-print(f"Escaneando {HOST}...")
-for port in COMMON_PORTS:
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(0.5)
-    result = sock.connect_ex((HOST, port))
-    if result == 0:
+def scan(port):
+    s = socket.socket()
+    s.settimeout(0.5)
+    if s.connect_ex((HOST, port)) == 0:
         print(f"[+] Puerto abierto: {port}")
-    else:
-        print(f"[-] Puerto cerrado: {port}")
-    sock.close()
+        OPEN_PORTS.append(port)
+    s.close()
+
+threads = []
+for p in PORTS:
+    t = threading.Thread(target=scan, args=(p,))
+    t.start()
+    threads.append(t)
+
+for t in threads:
+    t.join()
+
+with open("scan_report.txt", "w") as f:
+    for p in OPEN_PORTS:
+        f.write(f"{p}\n")
+print("[*] Reporte guardado en scan_report.txt")
